@@ -54,16 +54,21 @@ class FocalLoss(nn.Module):
         logits = logits.view(-1)
         targets = targets.view(-1).float()
 
+        # Clamp logits for numerical stability with AMP
+        logits = torch.clamp(logits, min=-50.0, max=50.0)
+
         # Compute BCE loss without reduction
         bce_loss = F.binary_cross_entropy_with_logits(
             logits, targets, reduction="none"
         )
 
-        # Compute probabilities
+        # Compute probabilities with clamping for numerical stability
         probs = torch.sigmoid(logits)
+        probs = torch.clamp(probs, min=1e-6, max=1.0 - 1e-6)
 
         # p_t = p if y=1 else 1-p
         p_t = probs * targets + (1 - probs) * (1 - targets)
+        p_t = torch.clamp(p_t, min=1e-6, max=1.0 - 1e-6)
 
         # Focal weight: (1 - p_t)^gamma
         focal_weight = (1 - p_t) ** self.gamma
@@ -73,6 +78,9 @@ class FocalLoss(nn.Module):
 
         # Focal loss
         focal_loss = alpha_weight * focal_weight * bce_loss
+
+        # Clamp final loss for safety
+        focal_loss = torch.clamp(focal_loss, min=0.0, max=100.0)
 
         # Reduction
         if self.reduction == "mean":
