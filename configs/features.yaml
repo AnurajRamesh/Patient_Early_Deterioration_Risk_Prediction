@@ -1,0 +1,89 @@
+# Feature configuration for ICU Deterioration Prediction
+# MIMIC-IV item IDs for vitals, labs, and critical events
+
+vitals:
+  # Core vital signs (from d_items.csv.gz)
+  items:
+    220045: "heart_rate"
+    220050: "abp_systolic"
+    220051: "abp_diastolic"
+    220052: "abp_mean"
+    220179: "nibp_systolic"
+    220180: "nibp_diastolic"
+    220210: "respiratory_rate"
+    223761: "temperature_f"
+    223762: "temperature_c"
+    220277: "spo2"
+
+  # Aggregation settings
+  aggregation: "mean"          # How to aggregate within hourly bins
+  forward_fill_hours: 4        # Max hours to forward-fill missing values
+
+  # Normalization (will be computed from training data)
+  normalize: true
+
+labs:
+  # Key laboratory tests (from d_labitems.csv.gz)
+  items:
+    50813: "lactate"
+    50820: "ph"
+    50821: "po2"
+    50818: "pco2"
+    50912: "creatinine"
+    50971: "potassium"
+    50983: "sodium"
+    50882: "bicarbonate"
+    50893: "calcium"
+    51301: "wbc"
+    51222: "hemoglobin"
+    51265: "platelets"
+    51237: "inr"
+    51275: "ptt"
+    50885: "bilirubin_total"
+    50931: "glucose"
+
+  # Lab-specific forward-fill windows (hours)
+  forward_fill_windows:
+    routine: 24       # Routine labs (CBC, BMP)
+    critical: 6       # Critical labs (lactate, ABG)
+
+  critical_labs:
+    - "lactate"
+    - "ph"
+    - "po2"
+    - "pco2"
+
+critical_events:
+  # Vasopressor medications (from inputevents)
+  vasopressors:
+    221906: "norepinephrine"
+    221289: "epinephrine"
+    221662: "dopamine"
+    221749: "phenylephrine"
+    222315: "vasopressin"
+    221653: "dobutamine"
+
+  # Intubation/ventilation (from procedureevents)
+  intubation:
+    224385: "intubation"
+    225792: "invasive_ventilation"
+    225794: "ventilator_mode"
+
+static_features:
+  # Static patient features
+  - age
+  - gender
+  - admission_type
+
+data_paths:
+  # Relative to data root directory
+  icustays: "mimic-iv-3.1/icu/icustays.csv.gz"
+  chartevents: "mimic-iv-3.1/icu/chartevents.csv.gz"
+  labevents: "mimic-iv-3.1/hosp/labevents.csv.gz"
+  inputevents: "mimic-iv-3.1/icu/inputevents.csv.gz"
+  procedureevents: "mimic-iv-3.1/icu/procedureevents.csv.gz"
+  admissions: "mimic-iv-3.1/hosp/admissions.csv.gz"
+  patients: "mimic-iv-3.1/hosp/patients.csv.gz"
+  d_items: "mimic-iv-3.1/icu/d_items.csv.gz"
+  d_labitems: "mimic-iv-3.1/hosp/d_labitems.csv.gz"
+  radiology_notes: "mimic-iv-note-2.2/note/radiology.csv.gz"

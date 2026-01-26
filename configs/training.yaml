@@ -1,0 +1,106 @@
+# Training configuration for ICU Deterioration Prediction
+
+data:
+  max_seq_len: 48              # Hours of history to use
+  prediction_horizon: 24       # Predict events within next 24 hours
+  min_icu_hours: 24            # Minimum ICU stay duration
+  exclusion_hours: 6           # Exclude deaths within first N hours
+
+  # Data splits (patient-level)
+  splits:
+    train: 0.70
+    val: 0.15
+    test: 0.15
+  split_by: "subject_id"       # Patient-level splitting
+  random_seed: 42
+
+model:
+  # Temporal encoder options
+  temporal_encoder: "lstm"     # "lstm" or "transformer"
+
+  # LSTM settings
+  lstm:
+    hidden_dim: 128
+    num_layers: 2
+    bidirectional: true
+    dropout: 0.3
+
+  # Transformer settings
+  transformer:
+    d_model: 128
+    nhead: 4
+    num_layers: 3
+    dropout: 0.1
+    max_seq_len: 168           # 7 days max
+
+  # Text encoder settings
+  text:
+    model_name: "emilyalsentzer/Bio_ClinicalBERT"
+    freeze_bert: true
+    projection_dim: 256
+    max_notes: 10              # Max notes per prediction time
+    max_note_length: 512       # Max tokens per note
+
+  # Fusion settings
+  fusion:
+    hidden_dim: 128
+    num_heads: 4
+    dropout: 0.1
+
+  # Classifier head
+  classifier:
+    hidden_dim: 64
+    dropout: 0.3
+
+training:
+  batch_size: 64
+  learning_rate: 1.0e-4
+  weight_decay: 1.0e-5
+  max_epochs: 100
+  patience: 10                 # Early stopping patience
+  gradient_clip: 1.0
+
+  # Loss function
+  loss: "focal"                # "focal" or "weighted_bce"
+  focal_loss:
+    alpha: 0.25
+    gamma: 2.0
+
+  # Learning rate scheduling
+  scheduler: "cosine"          # "cosine" or "step"
+  warmup_epochs: 3
+
+  # Mixed precision
+  use_amp: true                # Automatic mixed precision
+
+  # Checkpointing
+  checkpoint_every: 5          # Save every N epochs
+  save_best_only: true
+
+evaluation:
+  metrics:
+    - auroc
+    - auprc
+    - f1
+    - precision
+    - recall
+    - specificity
+    - brier_score
+
+  # Calibration
+  calibration_bins: 10
+
+  # Subgroup analysis
+  subgroups:
+    age_groups:
+      - [18, 40]
+      - [40, 65]
+      - [65, 200]
+    genders:
+      - "M"
+      - "F"
+
+logging:
+  log_every: 100               # Log every N batches
+  tensorboard: true
+  wandb: false
