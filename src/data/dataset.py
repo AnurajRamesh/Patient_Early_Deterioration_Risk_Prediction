@@ -87,12 +87,18 @@ class ICUDataset(Dataset):
         self.labs_cols = self.feature_info["labs_cols"]
 
         # Load embeddings if requested
+        # IMPORTANT: Load into memory dict to avoid concurrent access issues with DataLoader workers
         self.embeddings = None
         if load_embeddings:
             emb_dir = embeddings_dir or samples_dir
             emb_path = Path(emb_dir) / "cls_embeddings.npz"
             if emb_path.exists():
-                self.embeddings = np.load(emb_path, allow_pickle=True)
+                print(f"  Loading embeddings from {emb_path}...")
+                npz_data = np.load(emb_path, allow_pickle=True)
+                # Load all embeddings into memory as a dict to avoid lazy-load issues
+                self.embeddings = {key: npz_data[key].copy() for key in npz_data.files}
+                npz_data.close()
+                print(f"  Loaded {len(self.embeddings)} embeddings into memory")
 
         # Compute normalization stats if needed
         if self.normalize and self.norm_stats is None:
@@ -179,7 +185,7 @@ class ICUDataset(Dataset):
 
         # Get embeddings if available
         stay_id = str(sample_meta["stay_id"])
-        if self.embeddings is not None and stay_id in self.embeddings.files:
+        if self.embeddings is not None and stay_id in self.embeddings:
             embedding = self.embeddings[stay_id].astype(np.float32)
             # Handle NaN/Inf in embeddings
             embedding = np.nan_to_num(embedding, nan=0.0, posinf=0.0, neginf=0.0)
