@@ -35,7 +35,8 @@ env/
 
 # Jupyter
 .ipynb_checkpoints/
-*.ipynb
+# Keep notebooks/train_colab.ipynb but ignore others
+# *.ipynb
 
 # Data and outputs (large files)
 outputs/

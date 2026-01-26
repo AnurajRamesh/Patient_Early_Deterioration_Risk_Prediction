@@ -1,4 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
+  <component name="Black">
+    <option name="sdkName" value="al-risk-predictor" />
+  </component>
   <component name="ProjectRootManager" version="2" project-jdk-name="al-risk-predictor" project-jdk-type="Python SDK" />
 </project>
