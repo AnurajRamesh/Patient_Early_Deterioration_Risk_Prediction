@@ -1,0 +1,57 @@
+\documentclass[11pt]{article}
+
+% Page layout
+\usepackage[margin=1in]{geometry}
+\usepackage[utf8]{inputenc}
+
+% Tables
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{multirow}
+\usepackage{array}
+
+% Graphics
+\usepackage{graphicx}
+\usepackage{float}
+
+% References
+\usepackage{natbib}
+\bibliographystyle{apalike}
+
+% Hyperlinks
+\usepackage[colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=blue]{hyperref}
+
+% For better list formatting
+\usepackage{enumitem}
+
+% Math
+\usepackage{amsmath}
+\usepackage{amssymb}
+
+\title{Multimodal Deep Learning for Early Prediction of Patient Deterioration in the ICU:\\ Integrating Time-Series EHR Data with Clinical Notes}
+\author{Binesh Sadanandan}
+\date{}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+Early identification of patients at risk for clinical deterioration in the intensive care unit (ICU) remains a critical challenge. Delayed recognition of impending adverse events, including mortality, vasopressor initiation, and mechanical ventilation, contributes to preventable morbidity and mortality. We present a multimodal deep learning approach that combines structured time-series data (vital signs and laboratory values) with unstructured clinical notes to predict patient deterioration within 24 hours. Using the MIMIC-IV database, we constructed a cohort of 74,822 ICU stays and generated 5.7 million hourly prediction samples. Our architecture employs a bidirectional LSTM encoder for temporal patterns in physiologic data and ClinicalBERT embeddings for clinical notes, fused through a cross-modal attention mechanism. We also present a systematic review of existing approaches to ICU deterioration prediction, identifying 31 studies published between 2015 and 2024. Most existing models rely solely on structured data and achieve area under the curve (AUC) values between 0.70 and 0.85. Studies incorporating clinical notes remain rare but show promise for capturing information not present in structured fields. Our experimental results demonstrate [PLACEHOLDER FOR RESULTS]. This work contributes both a comprehensive review of the field and a reproducible multimodal framework for clinical deterioration prediction.
+\end{abstract}
+
+\input{sections/introduction}
+\input{sections/related_work}
+\input{sections/methods}
+\input{sections/results}
+\input{sections/discussion}
+\input{sections/conclusion}
+
+\clearpage
+\bibliography{references}
+
+\clearpage
+\appendix
+\input{sections/appendix}
+
+\end{document}

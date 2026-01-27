@@ -1,0 +1,55 @@
+\section{Related Work}
+
+\subsection{Traditional Early Warning Systems}
+
+The recognition that vital sign abnormalities precede adverse events dates to foundational work in the 1990s. Schein et al. documented that 84\% of cardiac arrest patients showed observable deterioration in the 8 hours before the event \citep{Schein1990}. This observation motivated the development of early warning scores that aggregate vital sign measurements into single risk estimates.
+
+The Modified Early Warning Score (MEWS) assigns points based on deviations from normal ranges for systolic blood pressure, heart rate, respiratory rate, temperature, and level of consciousness \citep{Subbe2001}. Higher scores indicate greater risk. The National Early Warning Score (NEWS) refined this approach with larger validation cohorts and evidence-based threshold selection \citep{Royal2012}. NEWS2, released in 2017, added consideration for patients at risk of hypercapnic respiratory failure \citep{Royal2017}.
+
+These aggregate scores have several limitations. First, they use fixed thresholds that may not account for individual patient baselines. A blood pressure of 100/60 might be normal for one patient and alarming for another. Second, they cannot capture temporal trends. A heart rate that has increased from 70 to 100 over 4 hours may carry more clinical significance than a stable rate of 100. Third, they ignore the wealth of laboratory data, medication information, and clinical context available in modern EHRs \citep{Churpek2014}.
+
+\subsection{Machine Learning for ICU Outcome Prediction}
+
+Machine learning approaches began appearing in the critical care literature in the early 2010s. Early work focused on mortality prediction using logistic regression with expanded feature sets \citep{Pirracchio2015}. These models demonstrated that including laboratory values, comorbidities, and intervention data improved discrimination over vital-sign-only approaches.
+
+The introduction of deep learning methods marked a significant advance. Recurrent neural networks, particularly Long Short-Term Memory (LSTM) networks, proved well-suited to the sequential nature of ICU data \citep{Lipton2016}. Rajkomar et al. applied deep learning to comprehensive EHR data from two academic medical centers, achieving AUC of 0.95 for in-hospital mortality prediction \citep{Rajkomar2018}. While this result generated excitement, subsequent analyses highlighted potential data leakage concerns, as features correlated with imminent death may have been included \citep{McDermott2021}.
+
+The problem of predicting specific adverse events, rather than general outcomes like mortality, has received growing attention. Henry et al. developed TREWScore for sepsis prediction, achieving AUC of 0.83 using a targeted real-time approach \citep{Henry2015}. Nemati et al. applied deep learning to the same problem, reporting AUC of 0.85 with earlier prediction times \citep{Nemati2018}. For respiratory failure prediction, Hyland et al. achieved AUC of 0.88 using gradient boosting on MIMIC-III data \citep{Hyland2020}.
+
+\subsection{Multimodal Approaches Combining Structured and Unstructured Data}
+
+The integration of clinical notes with structured data remains relatively unexplored in ICU settings. Most work combining these modalities has focused on general hospital outcomes rather than ICU-specific events.
+
+Rajkomar et al. included clinical notes in their comprehensive EHR models, finding modest but consistent improvements across prediction tasks \citep{Rajkomar2018}. They used a simple bag-of-words representation for text, leaving room for more sophisticated approaches. Huang et al. applied BERT-based models to clinical notes for discharge diagnosis prediction, demonstrating that contextualized embeddings outperformed traditional text representations \citep{Huang2019}.
+
+ClinicalBERT, introduced by Alsentzer et al., adapted the BERT language model to clinical text by pretraining on MIMIC-III clinical notes \citep{Alsentzer2019}. This domain-specific model captures medical terminology and clinical reasoning patterns better than general-purpose language models. Several subsequent studies have used ClinicalBERT for various clinical NLP tasks, though its application to real-time deterioration prediction remains limited.
+
+The challenge of fusing multiple data modalities has been addressed through various architectural approaches. Early fusion concatenates features from different sources before model input. Late fusion trains separate models and combines their predictions. Attention-based fusion, which we employ, learns to weight contributions from different modalities dynamically based on input characteristics \citep{Baltrusaitis2019}.
+
+\subsection{Summary of Existing Literature}
+
+Table~\ref{tab:literature_summary} summarizes key characteristics of studies on machine learning for ICU deterioration prediction.
+
+\begin{table}[H]
+\centering
+\caption{Summary of machine learning approaches for ICU deterioration prediction}
+\label{tab:literature_summary}
+\begin{tabular}{lccccc}
+\toprule
+\textbf{Study} & \textbf{Year} & \textbf{Outcome} & \textbf{Data Type} & \textbf{Model} & \textbf{AUC} \\
+\midrule
+Henry et al. & 2015 & Sepsis & Structured & Cox regression & 0.83 \\
+Lipton et al. & 2016 & Diagnoses & Structured & LSTM & 0.80 \\
+Nemati et al. & 2018 & Sepsis & Structured & Deep learning & 0.85 \\
+Rajkomar et al. & 2018 & Mortality & Structured + Notes & Deep learning & 0.95 \\
+Hyland et al. & 2020 & Circulatory failure & Structured & GBM & 0.94 \\
+Tomasev et al. & 2019 & AKI & Structured & RNN & 0.92 \\
+Kaji et al. & 2019 & Deterioration & Structured & LSTM & 0.85 \\
+Lauritsen et al. & 2020 & Sepsis & Structured & Temporal CNN & 0.86 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Several patterns emerge from this literature. First, deep learning methods, particularly recurrent architectures, have become the dominant approach for temporal clinical data. Second, most high-performing models focus on specific outcomes (sepsis, acute kidney injury) rather than general deterioration. Third, the integration of clinical notes remains rare, with only Rajkomar et al. demonstrating its value at scale. Fourth, external validation is uncommon, raising questions about generalizability.
+
+Our work addresses these gaps by: (1) explicitly targeting a composite deterioration outcome relevant to ICU care; (2) incorporating clinical notes through state-of-the-art transformer embeddings; (3) using attention-based fusion to dynamically weight structured and unstructured information; and (4) providing a fully reproducible implementation for external validation.

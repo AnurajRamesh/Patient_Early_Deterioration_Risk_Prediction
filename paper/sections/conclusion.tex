@@ -1,0 +1,23 @@
+\section{Conclusion}
+
+This work presents a multimodal deep learning approach for predicting patient deterioration in the intensive care unit. By combining structured time-series data from vital signs and laboratory values with clinical note embeddings, our model captures complementary information sources that reflect both physiologic status and clinical assessment.
+
+Using MIMIC-IV, we constructed a large-scale dataset of 5.7 million hourly prediction samples from 74,822 ICU stays. Our architecture employs bidirectional LSTM networks for temporal pattern recognition, ClinicalBERT for clinical note representation, and a gated attention mechanism for cross-modal fusion. This design allows the model to dynamically weight contributions from each modality based on input characteristics.
+
+Our systematic review of 31 studies revealed that most existing approaches rely solely on structured data and achieve AUROC values between 0.70 and 0.85. The integration of clinical notes into ICU deterioration prediction remains rare despite evidence that notes contain valuable information not present in structured fields.
+
+Key contributions of this work include:
+
+\begin{enumerate}
+    \item \textbf{Comprehensive literature review:} We provide the first systematic assessment of machine learning approaches specifically for ICU deterioration prediction, identifying methodological patterns and gaps in the existing literature.
+
+    \item \textbf{Large-scale multimodal dataset:} Our preprocessing pipeline generates millions of labeled samples with aligned structured and unstructured data, enabling robust training of deep learning models.
+
+    \item \textbf{Novel fusion architecture:} The gated cross-modal attention mechanism provides interpretable fusion of heterogeneous data sources while gracefully handling missing modalities.
+
+    \item \textbf{Reproducible implementation:} All code for data preprocessing, model training, and evaluation is publicly available, facilitating external validation and future research.
+\end{enumerate}
+
+Significant challenges remain before such models can be deployed in clinical practice. External validation on data from multiple institutions is essential to establish generalizability. Implementation studies must assess how clinicians interact with deterioration predictions and whether predictions translate to improved patient outcomes. Attention to calibration, fairness across demographic subgroups, and alert fatigue will be critical for responsible deployment.
+
+Early identification of patients at risk for clinical deterioration could enable timely intervention and improve ICU outcomes. Machine learning, particularly approaches that integrate multiple data modalities, offers a promising path toward this goal. Our work demonstrates the feasibility of multimodal prediction while highlighting the need for rigorous validation before clinical translation.

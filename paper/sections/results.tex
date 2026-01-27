@@ -1,0 +1,188 @@
+\section{Results}
+
+\subsection{Cohort Characteristics}
+
+From MIMIC-IV version 3.1, we identified 94,459 ICU stays. After applying inclusion and exclusion criteria, 74,822 ICU stays from 61,437 unique patients comprised our final cohort. Table~\ref{tab:cohort} summarizes the cohort characteristics.
+
+\begin{table}[H]
+\centering
+\caption{Cohort characteristics}
+\label{tab:cohort}
+\begin{tabular}{lcc}
+\toprule
+\textbf{Characteristic} & \textbf{Value} & \textbf{\%} \\
+\midrule
+Total ICU stays & 74,822 & -- \\
+Unique patients & 61,437 & -- \\
+\midrule
+\multicolumn{3}{l}{\textit{Demographics}} \\
+Age, median (IQR) & 65 (52--76) & -- \\
+Male sex & 42,156 & 56.3\% \\
+\midrule
+\multicolumn{3}{l}{\textit{ICU Characteristics}} \\
+Medical ICU & 31,425 & 42.0\% \\
+Surgical ICU & 24,891 & 33.3\% \\
+Cardiac ICU & 18,506 & 24.7\% \\
+LOS, median hours (IQR) & 52 (31--96) & -- \\
+\midrule
+\multicolumn{3}{l}{\textit{Outcomes}} \\
+ICU mortality & 5,612 & 7.5\% \\
+Vasopressor use & 28,445 & 38.0\% \\
+Mechanical ventilation & 19,234 & 25.7\% \\
+Any deterioration event & 35,891 & 48.0\% \\
+\midrule
+\multicolumn{3}{l}{\textit{Clinical Notes}} \\
+Stays with radiology notes & 49,674 & 66.4\% \\
+Notes per stay, median (IQR) & 3 (1--6) & -- \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Sample Generation}
+
+Hourly sample generation produced 5,720,904 prediction instances across the cohort. Table~\ref{tab:samples} shows the distribution across data splits.
+
+\begin{table}[H]
+\centering
+\caption{Sample distribution across data splits}
+\label{tab:samples}
+\begin{tabular}{lrrr}
+\toprule
+\textbf{Split} & \textbf{Samples} & \textbf{Positive} & \textbf{Rate} \\
+\midrule
+Training & 4,019,343 & 112,541 & 2.8\% \\
+Validation & 877,920 & 24,581 & 2.8\% \\
+Test & 823,641 & 23,062 & 2.8\% \\
+\midrule
+\textbf{Total} & \textbf{5,720,904} & \textbf{160,184} & \textbf{2.8\%} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Model Performance}
+
+% PLACEHOLDER: Update with actual training results
+
+\textbf{[RESULTS PLACEHOLDER - TO BE COMPLETED AFTER TRAINING]}
+
+\subsubsection{Primary Results}
+
+Table~\ref{tab:results} presents the performance of our multimodal model compared to ablation baselines on the held-out test set.
+
+\begin{table}[H]
+\centering
+\caption{Model performance on test set (n=823,641)}
+\label{tab:results}
+\begin{tabular}{lccccc}
+\toprule
+\textbf{Model} & \textbf{AUROC} & \textbf{AUPRC} & \textbf{Brier} & \textbf{Precision} & \textbf{Recall} \\
+\midrule
+Structured-only (LSTM) & [TBD] & [TBD] & [TBD] & [TBD] & [TBD] \\
+Notes-only & [TBD] & [TBD] & [TBD] & [TBD] & [TBD] \\
+\textbf{Multimodal (Ours)} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
+\midrule
+NEWS score baseline & [TBD] & [TBD] & [TBD] & [TBD] & [TBD] \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsubsection{Training Dynamics}
+
+Figure~\ref{fig:training_curves} shows the training and validation loss curves over epochs.
+
+\textbf{[FIGURE PLACEHOLDER: training\_curves.png]}
+
+% \begin{figure}[H]
+% \centering
+% \includegraphics[width=0.9\textwidth]{figures/training_curves.png}
+% \caption{Training and validation curves showing (A) loss, (B) AUROC, and (C) AUPRC over training epochs.}
+% \label{fig:training_curves}
+% \end{figure}
+
+\subsubsection{Calibration}
+
+Figure~\ref{fig:calibration} presents calibration plots comparing predicted probabilities to observed event rates.
+
+\textbf{[FIGURE PLACEHOLDER: calibration.png]}
+
+% \begin{figure}[H]
+% \centering
+% \includegraphics[width=0.6\textwidth]{figures/calibration.png}
+% \caption{Calibration plot for the multimodal model. The diagonal line represents perfect calibration.}
+% \label{fig:calibration}
+% \end{figure}
+
+\subsection{Ablation Analysis}
+
+To understand the contribution of each modality, we compared the full multimodal model against single-modality baselines.
+
+\textbf{[ABLATION RESULTS PLACEHOLDER]}
+
+The structured-only model using temporal features achieved AUROC of [TBD], demonstrating that vital signs and laboratory values alone provide substantial predictive signal. Adding clinical notes through our fusion mechanism improved AUROC by [TBD] percentage points (p < [TBD]), confirming that notes contain complementary information not captured in structured fields.
+
+\subsection{Feature Importance}
+
+We analyzed feature importance using gradient-based attribution methods. Table~\ref{tab:feature_importance} shows the top predictors.
+
+\begin{table}[H]
+\centering
+\caption{Top 10 features by importance in the temporal encoder}
+\label{tab:feature_importance}
+\begin{tabular}{clc}
+\toprule
+\textbf{Rank} & \textbf{Feature} & \textbf{Relative Importance} \\
+\midrule
+1 & [TBD] & 1.00 \\
+2 & [TBD] & [TBD] \\
+3 & [TBD] & [TBD] \\
+4 & [TBD] & [TBD] \\
+5 & [TBD] & [TBD] \\
+6 & [TBD] & [TBD] \\
+7 & [TBD] & [TBD] \\
+8 & [TBD] & [TBD] \\
+9 & [TBD] & [TBD] \\
+10 & [TBD] & [TBD] \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Subgroup Analysis}
+
+We evaluated model performance across clinically relevant subgroups to assess fairness and identify potential biases.
+
+\begin{table}[H]
+\centering
+\caption{Model performance across demographic subgroups}
+\label{tab:subgroups}
+\begin{tabular}{lcc}
+\toprule
+\textbf{Subgroup} & \textbf{N (samples)} & \textbf{AUROC} \\
+\midrule
+\multicolumn{3}{l}{\textit{Age}} \\
+18--40 years & [TBD] & [TBD] \\
+40--65 years & [TBD] & [TBD] \\
+65+ years & [TBD] & [TBD] \\
+\midrule
+\multicolumn{3}{l}{\textit{Sex}} \\
+Male & [TBD] & [TBD] \\
+Female & [TBD] & [TBD] \\
+\midrule
+\multicolumn{3}{l}{\textit{ICU Type}} \\
+Medical & [TBD] & [TBD] \\
+Surgical & [TBD] & [TBD] \\
+Cardiac & [TBD] & [TBD] \\
+\midrule
+\multicolumn{3}{l}{\textit{Note Availability}} \\
+With notes & [TBD] & [TBD] \\
+Without notes & [TBD] & [TBD] \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Attention Analysis}
+
+The cross-modal attention weights reveal how the model balances information from structured data versus clinical notes. On average, the gating mechanism assigned weight [TBD] to the temporal encoder and [TBD] to the text encoder, suggesting [TBD interpretation].
+
+For samples with clinical notes indicating acute concerns (e.g., "worsening" or "declining"), the model shifted attention toward the text modality (mean weight [TBD]), demonstrating learned sensitivity to note content.
+
+\textbf{[ATTENTION VISUALIZATION PLACEHOLDER]}

@@ -1,0 +1,131 @@
+\section{Appendix: Detailed Study Characteristics}
+
+\begin{table}[H]
+\centering
+\caption{Characteristics of studies included in systematic review}
+\label{tab:studies_detail}
+\small
+\begin{tabular}{p{2.5cm}ccccp{3cm}}
+\toprule
+\textbf{Study} & \textbf{Year} & \textbf{N} & \textbf{Outcome} & \textbf{Best AUC} & \textbf{Models Used} \\
+\midrule
+Henry et al. & 2015 & 2,400 & Sepsis & 0.83 & Cox, RF \\
+Lipton et al. & 2016 & 10,401 & Diagnoses & 0.80 & LSTM \\
+Nemati et al. & 2018 & 31,000 & Sepsis & 0.85 & Weibull-Cox \\
+Rajkomar et al. & 2018 & 216,000 & Mortality & 0.95 & DNN, Attention \\
+Tomasev et al. & 2019 & 700,000 & AKI & 0.92 & RNN \\
+Kaji et al. & 2019 & 8,000 & Deterioration & 0.85 & LSTM \\
+Hyland et al. & 2020 & 54,000 & Circ. failure & 0.94 & GBM, LSTM \\
+Lauritsen et al. & 2020 & 6,000 & Sepsis & 0.86 & TCN \\
+Shickel et al. & 2018 & 35,000 & Mortality & 0.84 & CNN-LSTM \\
+Johnson et al. & 2017 & 5,800 & Sepsis & 0.74 & RF, LR \\
+Futoma et al. & 2017 & 2,700 & Sepsis & 0.83 & MGP-RNN \\
+Che et al. & 2018 & 8,000 & Mortality & 0.86 & GRU-D \\
+Harutyunyan et al. & 2019 & 33,000 & Multiple & 0.87 & LSTM \\
+Purushotham et al. & 2018 & 34,000 & Mortality & 0.84 & DNN \\
+Song et al. & 2018 & 12,000 & Sepsis & 0.81 & Attention \\
+Kam \& Kim & 2017 & 4,800 & Mortality & 0.78 & DNN \\
+Caicedo-Torres & 2019 & 15,000 & Mortality & 0.82 & Capsule Net \\
+Thorsen-Meyer et al. & 2020 & 21,000 & Mortality & 0.89 & LSTM \\
+Sheetrit et al. & 2019 & 6,500 & Deterioration & 0.76 & XGBoost \\
+Meyer et al. & 2018 & 12,000 & Mortality & 0.81 & CNN \\
+Rocheteau et al. & 2021 & 23,000 & Mortality & 0.88 & Transformer \\
+Zhang et al. & 2022 & 18,000 & Sepsis & 0.84 & GNN \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Appendix: Model Architecture Details}
+
+\begin{table}[H]
+\centering
+\caption{Detailed model hyperparameters}
+\label{tab:hyperparams}
+\begin{tabular}{ll}
+\toprule
+\textbf{Component} & \textbf{Configuration} \\
+\midrule
+\multicolumn{2}{l}{\textit{Temporal Encoder}} \\
+Input dimension & 26 (10 vitals + 16 labs) \\
+LSTM hidden dimension & 128 \\
+LSTM layers & 2 \\
+LSTM dropout & 0.3 \\
+Bidirectional & Yes \\
+Attention heads & 4 \\
+\midrule
+\multicolumn{2}{l}{\textit{Text Encoder}} \\
+Base model & Bio\_ClinicalBERT \\
+Embedding dimension & 768 \\
+Projection dimension & 256 \\
+Projection dropout & 0.1 \\
+Weights frozen & Yes \\
+\midrule
+\multicolumn{2}{l}{\textit{Fusion Module}} \\
+Hidden dimension & 128 \\
+Gate activation & Sigmoid \\
+\midrule
+\multicolumn{2}{l}{\textit{Classifier}} \\
+Hidden dimension & 64 \\
+Dropout & 0.3 \\
+Output activation & Sigmoid \\
+\midrule
+\multicolumn{2}{l}{\textit{Training}} \\
+Optimizer & AdamW \\
+Learning rate & 1e-5 \\
+Weight decay & 1e-5 \\
+Batch size & 256 \\
+Max epochs & 50 \\
+Early stopping patience & 10 \\
+Gradient clipping & 1.0 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Appendix: Feature Definitions}
+
+\begin{table}[H]
+\centering
+\caption{Complete list of extracted features with MIMIC-IV item IDs}
+\label{tab:features_complete}
+\small
+\begin{tabular}{llll}
+\toprule
+\textbf{Category} & \textbf{Feature} & \textbf{ItemID(s)} & \textbf{Imputation} \\
+\midrule
+\multicolumn{4}{l}{\textit{Vital Signs}} \\
+& Heart Rate & 220045 & FF 4h \\
+& SBP (arterial) & 220050 & FF 4h \\
+& SBP (non-invasive) & 220179 & FF 4h \\
+& DBP (arterial) & 220051 & FF 4h \\
+& DBP (non-invasive) & 220180 & FF 4h \\
+& MAP (arterial) & 220052 & FF 4h \\
+& MAP (non-invasive) & 220181 & FF 4h \\
+& Respiratory Rate & 220210 & FF 4h \\
+& SpO2 & 220277 & FF 4h \\
+& Temperature (F) & 223761 & FF 4h \\
+& Temperature (C) & 223762 & FF 4h \\
+\midrule
+\multicolumn{4}{l}{\textit{Laboratory Values}} \\
+& Lactate & 50813 & LOCF 6h \\
+& Creatinine & 50912 & LOCF 24h \\
+& BUN & 51006 & LOCF 24h \\
+& Potassium & 50971 & LOCF 24h \\
+& Sodium & 50983 & LOCF 24h \\
+& Glucose & 50931 & LOCF 24h \\
+& WBC & 51301 & LOCF 24h \\
+& Hemoglobin & 51222 & LOCF 24h \\
+& Hematocrit & 51221 & LOCF 24h \\
+& Platelets & 51265 & LOCF 24h \\
+& Bilirubin & 50885 & LOCF 24h \\
+& Albumin & 50862 & LOCF 48h \\
+& pH & 50820 & LOCF 6h \\
+& pCO2 & 50818 & LOCF 6h \\
+& pO2 & 50821 & LOCF 6h \\
+& Bicarbonate & 50882 & LOCF 24h \\
+\bottomrule
+\end{tabular}
+\begin{tablenotes}
+\small
+\item FF = Forward fill; LOCF = Last observation carried forward; h = hours
+\end{tablenotes}
+\end{table}

@@ -1,0 +1,242 @@
+\section{Methods}
+
+\subsection{Data Source}
+
+We used MIMIC-IV version 3.1, a publicly available database containing de-identified health records from patients admitted to Beth Israel Deaconess Medical Center between 2008 and 2019 \citep{Johnson2023}. MIMIC-IV includes comprehensive ICU data: vital signs recorded at high frequency, laboratory results, medication administrations, procedure records, diagnosis codes, and clinical notes. The database contains over 94,000 ICU stays across medical, surgical, and cardiac intensive care units.
+
+We also utilized the MIMIC-IV-Note module (version 2.2), which provides clinical documentation including discharge summaries, radiology reports, and nursing notes. These notes are linked to hospital admissions and can be temporally aligned with structured data.
+
+\subsection{Cohort Selection}
+
+We defined our study cohort using the following criteria:
+
+\textbf{Inclusion criteria:}
+\begin{itemize}
+    \item ICU stay duration $\geq$ 24 hours (to allow adequate observation period)
+    \item Patient age $\geq$ 18 years at admission
+    \item Available vital sign measurements within the first 6 hours
+\end{itemize}
+
+\textbf{Exclusion criteria:}
+\begin{itemize}
+    \item Death within 6 hours of ICU admission (insufficient time for prediction to be actionable)
+    \item Missing admission or discharge timestamps
+    \item Stays with no recorded vital signs or laboratory values
+\end{itemize}
+
+After applying these criteria, our final cohort included 74,822 ICU stays from 61,437 unique patients. Some patients had multiple ICU stays, which were treated as independent observations but assigned to the same data split to prevent information leakage.
+
+\subsection{Outcome Definition}
+
+We defined clinical deterioration as a composite outcome occurring within a 24-hour prediction horizon. Specifically, for each hourly prediction point, the label was positive if any of the following events occurred in the subsequent 24 hours:
+
+\textbf{1. ICU Mortality:} Death occurring during the ICU stay, as indicated by the hospital expiration flag combined with death time within ICU boundaries.
+
+\textbf{2. Vasopressor Initiation:} First administration of vasopressor medications, indicating hemodynamic instability requiring pharmacologic support. We identified vasopressors using MIMIC item IDs for:
+\begin{itemize}
+    \item Norepinephrine (itemid 221906)
+    \item Epinephrine (itemid 221289)
+    \item Dopamine (itemid 221662)
+    \item Phenylephrine (itemid 221749)
+    \item Vasopressin (itemid 222315)
+\end{itemize}
+
+\textbf{3. Mechanical Ventilation Initiation:} Start of invasive mechanical ventilation, indicating respiratory failure. We identified ventilation initiation using procedure events for intubation (itemids 224385, 225792).
+
+Patients already receiving vasopressors or mechanical ventilation at a given prediction time were not labeled positive for subsequent continuation of these interventions. We focused on \textit{new} deterioration events only.
+
+The overall positive rate in our cohort was 2.8\%, reflecting the relative rarity of new deterioration events at any given hour, even in an ICU population.
+
+\subsection{Feature Engineering}
+
+\subsubsection{Vital Signs}
+
+We extracted 10 vital sign measurements from the chartevents table, selected based on clinical relevance and data availability:
+
+\begin{table}[H]
+\centering
+\caption{Vital sign features extracted from MIMIC-IV}
+\label{tab:vitals}
+\begin{tabular}{llc}
+\toprule
+\textbf{Feature} & \textbf{MIMIC ItemID(s)} & \textbf{Units} \\
+\midrule
+Heart Rate & 220045 & bpm \\
+Systolic Blood Pressure & 220050, 220179 & mmHg \\
+Diastolic Blood Pressure & 220051, 220180 & mmHg \\
+Mean Arterial Pressure & 220052, 220181 & mmHg \\
+Respiratory Rate & 220210 & breaths/min \\
+SpO2 & 220277 & \% \\
+Temperature & 223761, 223762 & $^\circ$C \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Vital signs were aggregated to hourly intervals using the mean of all measurements within each hour. Missing values were imputed using forward-fill with a maximum gap of 4 hours, after which values were treated as missing.
+
+\subsubsection{Laboratory Values}
+
+We extracted 16 laboratory measurements representing key organ systems and clinical states:
+
+\begin{table}[H]
+\centering
+\caption{Laboratory features extracted from MIMIC-IV}
+\label{tab:labs}
+\begin{tabular}{llc}
+\toprule
+\textbf{Feature} & \textbf{Clinical Relevance} & \textbf{ItemID} \\
+\midrule
+Lactate & Tissue perfusion & 50813 \\
+Creatinine & Renal function & 50912 \\
+BUN & Renal function & 51006 \\
+Potassium & Electrolyte status & 50971 \\
+Sodium & Electrolyte status & 50983 \\
+Glucose & Metabolic status & 50931 \\
+WBC & Infection/inflammation & 51301 \\
+Hemoglobin & Oxygen carrying capacity & 51222 \\
+Hematocrit & Volume status & 51221 \\
+Platelets & Coagulation & 51265 \\
+Bilirubin & Hepatic function & 50885 \\
+Albumin & Nutritional status & 50862 \\
+pH & Acid-base status & 50820 \\
+pCO2 & Respiratory status & 50818 \\
+pO2 & Oxygenation & 50821 \\
+Bicarbonate & Acid-base status & 50882 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Laboratory values were propagated forward using last-observation-carried-forward (LOCF) with variable windows depending on test frequency: 6 hours for critical values (lactate, blood gas), 24 hours for routine tests.
+
+\subsubsection{Clinical Notes}
+
+We extracted radiology reports from the MIMIC-IV-Note module. These notes were chosen because they are typically generated during the ICU stay and contain assessments of acute pathology. For each prediction time point, we included all notes with chart times before the prediction time.
+
+Text preprocessing included:
+\begin{itemize}
+    \item Removal of de-identification placeholders ([**...**])
+    \item Lowercasing and whitespace normalization
+    \item Truncation to 512 tokens (ClinicalBERT maximum)
+\end{itemize}
+
+Notes were encoded using ClinicalBERT (emilyalsentzer/Bio\_ClinicalBERT), a BERT model pretrained on MIMIC-III clinical notes \citep{Alsentzer2019}. We extracted the [CLS] token representation as a 768-dimensional embedding for each note. For patients with multiple notes, we used the most recent note available at prediction time.
+
+\subsection{Sample Generation}
+
+For each ICU stay, we generated hourly prediction samples starting from hour 6 (to ensure sufficient observation history) through hour 48 or discharge, whichever came first. Each sample consisted of:
+
+\begin{itemize}
+    \item A 48-hour look-back window of vital signs and laboratory values
+    \item The most recent clinical note embedding (if available)
+    \item Static features: age, gender, presence of notes
+    \item Binary label indicating deterioration within 24 hours
+\end{itemize}
+
+This process generated 5,720,904 total samples: 4,019,343 for training (70\%), 877,920 for validation (15\%), and 823,641 for testing (15\%). Splits were performed at the patient level to prevent data leakage.
+
+\subsection{Model Architecture}
+
+Our multimodal architecture consists of three main components: a temporal encoder for structured time-series data, a text encoder for clinical notes, and a fusion module that combines these representations for final prediction.
+
+\subsubsection{Temporal Encoder}
+
+The temporal encoder processes the 48-hour sequences of vital signs and laboratory values. We use a bidirectional LSTM network:
+
+\begin{equation}
+\mathbf{h}_t = \text{BiLSTM}(\mathbf{x}_t, \mathbf{h}_{t-1})
+\end{equation}
+
+where $\mathbf{x}_t \in \mathbb{R}^{26}$ is the concatenated vital and lab vector at time $t$, and $\mathbf{h}_t \in \mathbb{R}^{256}$ is the hidden state (128 dimensions per direction).
+
+We apply temporal attention over the LSTM outputs to obtain a fixed-size representation:
+
+\begin{equation}
+\alpha_t = \frac{\exp(\mathbf{w}^\top \mathbf{h}_t)}{\sum_{t'} \exp(\mathbf{w}^\top \mathbf{h}_{t'})}
+\end{equation}
+
+\begin{equation}
+\mathbf{z}_{\text{temporal}} = \sum_t \alpha_t \mathbf{h}_t
+\end{equation}
+
+The temporal encoder has 2 layers with dropout of 0.3 between layers.
+
+\subsubsection{Text Encoder}
+
+Clinical notes are encoded using frozen ClinicalBERT weights. The 768-dimensional [CLS] embedding is projected to match the temporal representation dimension:
+
+\begin{equation}
+\mathbf{z}_{\text{text}} = \text{ReLU}(\mathbf{W}_{\text{proj}} \mathbf{e}_{\text{CLS}} + \mathbf{b}_{\text{proj}})
+\end{equation}
+
+where $\mathbf{W}_{\text{proj}} \in \mathbb{R}^{256 \times 768}$.
+
+\subsubsection{Cross-Modal Fusion}
+
+We fuse temporal and text representations using a gated attention mechanism:
+
+\begin{equation}
+\mathbf{g} = \sigma(\mathbf{W}_g [\mathbf{z}_{\text{temporal}}; \mathbf{z}_{\text{text}}] + \mathbf{b}_g)
+\end{equation}
+
+\begin{equation}
+\mathbf{z}_{\text{fused}} = \mathbf{g} \odot \mathbf{z}_{\text{temporal}} + (1 - \mathbf{g}) \odot \mathbf{z}_{\text{text}}
+\end{equation}
+
+This gating mechanism allows the model to dynamically weight contributions from each modality. For samples without clinical notes, the text representation is set to zero, and the gate learns to rely entirely on temporal features.
+
+\subsubsection{Classifier}
+
+The fused representation is passed through a two-layer classifier:
+
+\begin{equation}
+\hat{y} = \sigma(\mathbf{W}_2 \text{ReLU}(\mathbf{W}_1 \mathbf{z}_{\text{fused}} + \mathbf{b}_1) + \mathbf{b}_2)
+\end{equation}
+
+with hidden dimension 64 and dropout 0.3.
+
+\subsection{Training}
+
+\subsubsection{Loss Function}
+
+Given the class imbalance (2.8\% positive rate), we use binary cross-entropy loss:
+
+\begin{equation}
+\mathcal{L} = -\frac{1}{N} \sum_{i=1}^{N} [y_i \log(\hat{y}_i) + (1-y_i) \log(1-\hat{y}_i)]
+\end{equation}
+
+\subsubsection{Optimization}
+
+We train using AdamW optimizer with:
+\begin{itemize}
+    \item Learning rate: $1 \times 10^{-5}$
+    \item Weight decay: $1 \times 10^{-5}$
+    \item Batch size: 256
+    \item Gradient clipping: max norm 1.0
+\end{itemize}
+
+Learning rate scheduling uses cosine annealing with warm restarts. We train for up to 50 epochs with early stopping based on validation AUROC (patience = 10 epochs).
+
+\subsection{Evaluation Metrics}
+
+We evaluate model performance using:
+
+\begin{itemize}
+    \item \textbf{AUROC:} Area under the receiver operating characteristic curve, measuring discrimination across all thresholds.
+    \item \textbf{AUPRC:} Area under the precision-recall curve, more informative for imbalanced datasets.
+    \item \textbf{Calibration:} Assessed via Brier score and reliability diagrams.
+    \item \textbf{Threshold-specific metrics:} Precision, recall, and F1 score at the threshold maximizing F1 on the validation set.
+\end{itemize}
+
+\subsection{Ablation Studies}
+
+To understand the contribution of each component, we evaluate:
+
+\begin{enumerate}
+    \item \textbf{Structured-only model:} Temporal encoder without text input
+    \item \textbf{Notes-only model:} Text encoder without temporal features
+    \item \textbf{Full multimodal model:} Both modalities with fusion
+\end{enumerate}
+
+\subsection{Implementation}
+
+All models were implemented in PyTorch 2.0. Training was performed on NVIDIA A100 GPUs. The complete codebase, including data preprocessing, model architecture, and evaluation scripts, is available at \url{https://github.com/thedatasense/Patient_Early_Deterioration_Risk_Prediction}.

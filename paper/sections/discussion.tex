@@ -1,0 +1,81 @@
+\section{Discussion}
+
+Our work presents a multimodal deep learning approach for predicting patient deterioration in the ICU, combining structured time-series data with clinical notes. We constructed a large-scale dataset from MIMIC-IV and developed an architecture that fuses temporal patterns in physiologic measurements with semantic information from clinical documentation. This section discusses our findings in context, acknowledges limitations, and identifies directions for future work.
+
+\subsection{Comparison with Existing Approaches}
+
+Our systematic review identified 31 studies applying machine learning to ICU deterioration prediction. Most achieved AUROC values between 0.70 and 0.85, with the highest-performing models using recurrent neural networks on structured data. Our multimodal approach builds on this foundation while addressing a notable gap: the integration of clinical notes.
+
+Only three prior studies incorporated free-text data into ICU outcome prediction, and none used modern transformer-based embeddings like ClinicalBERT. The improvement we observe from adding clinical notes confirms that unstructured documentation contains predictive information not captured in structured fields. This aligns with clinical intuition: physicians and nurses record observations, assessments, and concerns in notes that have no structured equivalent.
+
+The magnitude of improvement from multimodal fusion is modest but consistent. This suggests that clinical notes provide incremental rather than transformative benefit. One interpretation is that the most predictive information---acute physiologic derangements---is already captured in vital signs and laboratory values. Notes may contribute by capturing earlier, subtler signals or by providing context that helps the model interpret ambiguous structured data.
+
+\subsection{Clinical Relevance}
+
+Predicting deterioration 24 hours in advance creates a clinically actionable window. This lead time could enable:
+
+\textbf{Enhanced monitoring:} High-risk patients could receive more frequent vital sign checks or continuous monitoring of specific parameters.
+
+\textbf{Preemptive intervention:} Clinicians might initiate volume resuscitation, adjust medications, or arrange for higher levels of care before frank deterioration occurs.
+
+\textbf{Resource allocation:} Anticipating which patients may need escalation of care helps ICU teams plan staffing and bed availability.
+
+\textbf{Goals-of-care discussions:} For patients with poor prognoses, early identification of deterioration risk supports timely conversations about treatment preferences.
+
+However, translating predictive models into clinical benefit requires careful implementation. Alert fatigue is a well-documented barrier to clinical decision support adoption \citep{Ancker2017}. If a model generates too many false alarms, clinicians will learn to ignore its predictions. Our precision-recall trade-off analysis directly addresses this concern, allowing institutions to select operating thresholds based on their tolerance for false positives versus false negatives.
+
+\subsection{The Value of Clinical Notes}
+
+Our findings contribute to ongoing debates about the utility of unstructured clinical text for predictive modeling. Notes are expensive to process at scale, requiring either manual annotation or sophisticated NLP methods. They also introduce privacy concerns, as free text may contain sensitive information not present in structured fields.
+
+We show that pretrained language models like ClinicalBERT enable efficient note representation without task-specific fine-tuning. By extracting [CLS] embeddings from frozen BERT weights, we avoided the computational cost of end-to-end training while still capturing semantic content. This approach makes multimodal modeling practical for large-scale ICU datasets.
+
+The gated fusion mechanism provides interpretability into how the model weighs different information sources. Our attention analysis reveals that the model learns to emphasize notes when they contain acute concern language, suggesting it has learned clinically meaningful patterns. This selective attention may help explain why notes improve predictions for some patients more than others.
+
+\subsection{Generalizability Concerns}
+
+MIMIC-IV comes from a single academic medical center in Boston. Patient populations, clinical practices, and documentation styles vary substantially across institutions. Models trained on MIMIC data may not generalize to community hospitals, different geographic regions, or healthcare systems in other countries.
+
+We attempted to mitigate overfitting through patient-level splits and early stopping, but these techniques cannot address fundamental differences in data distributions. External validation on independent datasets is essential before clinical deployment. Unfortunately, access to large-scale ICU databases with clinical notes remains limited, making such validation challenging.
+
+The positive rate in our dataset (2.8\%) may differ from rates in other settings. Institutions with sicker populations or different admission criteria would have different base rates, affecting calibration even if discrimination remains stable.
+
+\subsection{Methodological Considerations}
+
+Several methodological choices warrant discussion.
+
+\textbf{Outcome definition:} We used a composite outcome combining mortality, vasopressor initiation, and mechanical ventilation. This definition captures clinically significant events but may conflate heterogeneous conditions. A patient started on vasopressors for planned surgery has different implications than one requiring pressors for septic shock. Future work could model these outcomes separately or develop hierarchical approaches that distinguish elective from emergent interventions.
+
+\textbf{Temporal alignment:} We used notes available up to each prediction time, but note timestamps in MIMIC represent filing time, not observation time. A note filed at 10 AM may describe events from earlier that morning or the previous night. This temporal uncertainty is inherent to EHR data and may dilute the information content of notes.
+
+\textbf{Missing data:} Many samples lacked clinical notes, either because none were written or because available notes preceded the observation window. Our architecture handles missing notes through the gating mechanism, but patients without notes may systematically differ from those with notes (e.g., shorter stays, less complex conditions).
+
+\textbf{Label definition:} We labeled samples based on events occurring within 24 hours. This creates potential for label leakage if early indicators of deterioration influence both features and labels. For example, a rising heart rate might precede vasopressor initiation by only an hour, making prediction trivially easy for that sample. We addressed this by requiring a 24-hour horizon, but subtle leakage may persist.
+
+\subsection{Limitations}
+
+This study has several limitations.
+
+\textbf{Single-center data:} Despite MIMIC-IV's size, it represents one institution's practices and patient population. External validation is needed before clinical deployment.
+
+\textbf{Retrospective design:} We used historical data with known outcomes. Prospective validation would better assess real-world utility.
+
+\textbf{Note selection:} We used only radiology reports, which represent a subset of available clinical documentation. Nursing notes and physician progress notes contain additional relevant information but require more sophisticated preprocessing.
+
+\textbf{Temporal granularity:} Hourly predictions may miss rapid deterioration occurring within shorter windows. Higher-frequency prediction could enable more timely intervention but would increase computational cost.
+
+\textbf{No intervention analysis:} We do not model how predictions might change clinical behavior or outcomes. A model that predicts deterioration cannot improve outcomes unless clinicians act on its predictions effectively.
+
+\subsection{Future Directions}
+
+Several extensions could strengthen this work.
+
+\textbf{Prospective validation:} Deploying the model in a clinical setting and measuring impact on patient outcomes would demonstrate real-world value.
+
+\textbf{Multi-center validation:} Testing on data from diverse healthcare systems would assess generalizability and identify population-specific calibration needs.
+
+\textbf{Expanded note coverage:} Including nursing notes and physician documentation could capture additional predictive signals.
+
+\textbf{Explainability:} Developing methods to explain individual predictions---identifying which vital signs, lab trends, or note phrases drove a high-risk score---would support clinical adoption.
+
+\textbf{Integration studies:} Understanding how clinicians interact with deterioration predictions, and what workflows best support appropriate responses, is essential for translation.
